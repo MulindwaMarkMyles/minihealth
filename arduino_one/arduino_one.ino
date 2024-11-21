@@ -87,7 +87,7 @@ void setup()
 	lcd.backlight();
 
   //Initialize the serial port
-  Serial.begin(115200);
+  Serial.begin(9600);
   Serial.println("Initialing the system..");
 
 	lcd.clear();
@@ -123,5 +123,16 @@ void loop()
 	lcd.print("GROUP 6");
   lcd.setCursor(1, 1);
   lcd.print("MINI - HEALTH");
-  customDelay(3000);
+  customDelay(1000);
+
+  if (Serial.available() > 0) { 
+    String data = Serial.readString(); 
+    lcd.clear();
+    lcd.setCursor(1, 0);
+    lcd.print("TEMP READINGS");
+    lcd.setCursor(0, 1);
+    lcd.print(data);
+    customDelay(1000);
+    Serial.println(data); 
+  }
 }
