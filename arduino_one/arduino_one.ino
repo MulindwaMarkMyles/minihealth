@@ -37,7 +37,6 @@ void customDigitalWrite(uint8_t pin, uint8_t value) {
     }
 }
 
-
 void customPinMode(uint8_t pin, uint8_t mode) {
     if (pin < 8) { // PORTD
         if (mode == OUTPUT) {
@@ -73,24 +72,22 @@ void customPinMode(uint8_t pin, uint8_t mode) {
         }
     }
 }
-int LEDpin = 13;
 
+int LEDpin = 10;
 
-void setup()
-{
-
-  customPinMode(13, OUTPUT);
+void setup() {
+  customPinMode(10, OUTPUT);
   customDigitalWrite(LEDpin, LOW);
   // initialize the LCD
-	lcd.begin();
+  lcd.begin();
   // Turn on the blacklight and print a message.
-	lcd.backlight();
+  lcd.backlight();
 
   //Initialize the serial port
   Serial.begin(9600);
-  Serial.println("Initialing the system..");
+  Serial.println("Initializing the system..");
 
-	lcd.clear();
+  lcd.clear();
   lcd.setCursor(1, 0);
   lcd.print("Initializing");
   lcd.setCursor(1, 1);
@@ -100,7 +97,7 @@ void setup()
   lcd.clear();
 
   lcd.setCursor(1, 0);
-	lcd.print("GROUP 6");
+  lcd.print("GROUP 6");
   lcd.setCursor(1, 1);
   lcd.print("MINI - HEALTH");
   customDelay(3000);
@@ -113,14 +110,12 @@ void setup()
   lcd.print("done.");
   customDelay(1500);
   customDigitalWrite(LEDpin, HIGH);
-  
 }
 
-void loop()
-{
+void loop() {
   lcd.clear();
-	lcd.setCursor(1, 0);
-	lcd.print("GROUP 6");
+  lcd.setCursor(1, 0);
+  lcd.print("GROUP 6");
   lcd.setCursor(1, 1);
   lcd.print("MINI - HEALTH");
   customDelay(1000);

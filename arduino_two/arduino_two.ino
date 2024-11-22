@@ -71,7 +71,7 @@ void customPinMode(uint8_t pin, uint8_t mode) {
     }
 }
 
-int LEDpin = 10;
+int LEDpin = 13;
 
 void setup() {
   // Configure ADC1 (A1) as input using DDRC register
