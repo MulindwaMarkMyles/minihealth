@@ -1,17 +1,22 @@
 //THIS IS THE MAIN ARDUINO
 // - It controls all the others.
 
-#include <Wire.h> 
+#include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+#include <SPI.h>
 
-// Set the LCD address to 0x27 for a 16 chars and 2 line display
+#define SS1 10
+#define SS2 9
+#define SS3 8
+#define LEDpin 1
+
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-void customDelay(unsigned long delay){
+void customDelay(unsigned long delay) {
   unsigned long start_time = millis();
-  while ((millis() - start_time) < delay)
-  {}
+  while ((millis() - start_time) < delay) {}
 }
+
 
 void customDigitalWrite(uint8_t pin, uint8_t value) {
     if (pin < 8) { // PORTD
@@ -73,61 +78,58 @@ void customPinMode(uint8_t pin, uint8_t mode) {
     }
 }
 
-int LEDpin = 10;
+void communicateWithSlave(uint8_t slavePin, const char* slaveName) {
+  customDigitalWrite(slavePin, LOW);              // Select the slave
+  byte receivedData; // Variable to store received bytes
+
+  receivedData = SPI.transfer(1); // Send request and read response
+  
+  customDigitalWrite(slavePin, HIGH);             // Deselect the slave
+
+  // Process and display the received data
+  Serial.print("TempC: ");
+  Serial.print(receivedData);
+  Serial.print("°C \n");
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("MINI - HEALTH");
+  lcd.setCursor(0, 1);
+  lcd.print("TempC: ");
+  lcd.print(receivedData);
+  
+  delay(1000); // Delay for 1 second
+}
 
 void setup() {
-  customPinMode(10, OUTPUT);
-  customDigitalWrite(LEDpin, LOW);
-  // initialize the LCD
+  SPI.begin();
+  SPI.setClockDivider(SPI_CLOCK_DIV8);
+
+  customPinMode(SS1, OUTPUT);
+  customPinMode(SS2, OUTPUT);
+  customPinMode(SS3, OUTPUT);
+  customPinMode(LEDpin, OUTPUT);
+
+  customDigitalWrite(SS1, HIGH);
+  customDigitalWrite(SS2, HIGH);
+  customDigitalWrite(SS3, HIGH);
+
   lcd.begin();
-  // Turn on the blacklight and print a message.
   lcd.backlight();
-
-  //Initialize the serial port
-  Serial.begin(9600);
-  Serial.println("Initializing the system..");
-
-  lcd.clear();
-  lcd.setCursor(1, 0);
-  lcd.print("Initializing");
-  lcd.setCursor(1, 1);
-  lcd.print("the system..");
-
-  customDelay(2000);
-  lcd.clear();
 
   lcd.setCursor(1, 0);
   lcd.print("GROUP 6");
   lcd.setCursor(1, 1);
   lcd.print("MINI - HEALTH");
-  customDelay(3000);
-
-  lcd.clear();
-
-  lcd.setCursor(1, 0);
-  lcd.print("Initialization");
-  lcd.setCursor(1, 1);
-  lcd.print("done.");
   customDelay(1500);
-  customDigitalWrite(LEDpin, HIGH);
+
+  Serial.begin(115200);
+  Serial.println("System Initialized");
 }
 
 void loop() {
-  lcd.clear();
-  lcd.setCursor(1, 0);
-  lcd.print("GROUP 6");
-  lcd.setCursor(1, 1);
-  lcd.print("MINI - HEALTH");
-  customDelay(1000);
-
-  if (Serial.available() > 0) { 
-    String data = Serial.readString(); 
-    lcd.clear();
-    lcd.setCursor(1, 0);
-    lcd.print("TEMP READINGS");
-    lcd.setCursor(0, 1);
-    lcd.print(data);
-    customDelay(1000);
-    Serial.println(data); 
-  }
+  communicateWithSlave(SS1, "Slave 1");
+  communicateWithSlave(SS2, "Slave 2");
+  communicateWithSlave(SS3, "Slave 3");
 }
+
