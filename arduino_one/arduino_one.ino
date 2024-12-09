@@ -1,9 +1,16 @@
-//THIS IS THE MAIN ARDUINO
-// - It controls all the others.
-
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <SPI.h>
+
+// Register definitions using pointers
+volatile uint8_t *_PORTB = 0x25;
+volatile uint8_t *_DDRB = 0x24;
+
+volatile uint8_t *_PORTC = 0x28;
+volatile uint8_t *_DDRC = 0x27;
+
+volatile uint8_t *_PORTD = 0x2B;
+volatile uint8_t *_DDRD = 0x2A;
 
 #define SS1 10
 #define SS2 9
@@ -17,63 +24,62 @@ void customDelay(unsigned long delay) {
   while ((millis() - start_time) < delay) {}
 }
 
-
 void customDigitalWrite(uint8_t pin, uint8_t value) {
-    if (pin < 8) { // PORTD
+    if (pin < 8) { // _PORTD
         if (value == HIGH) {
-            PORTD |= (1 << pin); 
+            *_PORTD |= (1 << pin); 
         } else {
-            PORTD &= ~(1 << pin);
+            *_PORTD &= ~(1 << pin);
         }
-    } else if (pin < 14) { // PORTB
-        pin -= 8; // Adjust pin number for PORTB
+    } else if (pin < 14) { // _PORTB
+        pin -= 8; // Adjust pin number for _PORTB
         if (value == HIGH) {
-            PORTB |= (1 << pin); 
+            *_PORTB |= (1 << pin); 
         } else {
-            PORTB &= ~(1 << pin); 
+            *_PORTB &= ~(1 << pin); 
         }
-    } else if (pin < 20) { // (A0-A5) belong to PORTC
-        pin -= 14; // Adjust pin number for PORTC
+    } else if (pin < 20) { // _PORTC (A0-A5)
+        pin -= 14; // Adjust pin number for _PORTC
         if (value == HIGH) {
-            PORTC |= (1 << pin);  
+            *_PORTC |= (1 << pin);  
         } else {
-            PORTC &= ~(1 << pin); 
+            *_PORTC &= ~(1 << pin); 
         }
     }
 }
 
 void customPinMode(uint8_t pin, uint8_t mode) {
-    if (pin < 8) { // PORTD
+    if (pin < 8) { // _PORTD
         if (mode == OUTPUT) {
-            DDRD |= (1 << pin); 
+            *_DDRD |= (1 << pin); 
         } else if (mode == INPUT) {
-            DDRD &= ~(1 << pin); 
-            PORTD &= ~(1 << pin); // Disable pull-up
+            *_DDRD &= ~(1 << pin); 
+            *_PORTD &= ~(1 << pin); // Disable pull-up
         } else if (mode == INPUT_PULLUP) {
-            DDRD &= ~(1 << pin); 
-            PORTD |= (1 << pin); // Enable pull-up
+            *_DDRD &= ~(1 << pin); 
+            *_PORTD |= (1 << pin); // Enable pull-up
         }
-    } else if (pin < 14) { // PORTB
-        pin -= 8; // Adjust for PORTB pins
+    } else if (pin < 14) { // _PORTB
+        pin -= 8; // Adjust for _PORTB pins
         if (mode == OUTPUT) {
-            DDRB |= (1 << pin);
+            *_DDRB |= (1 << pin);
         } else if (mode == INPUT) {
-            DDRB &= ~(1 << pin); 
-            PORTB &= ~(1 << pin); // Disable pull-up
+            *_DDRB &= ~(1 << pin); 
+            *_PORTB &= ~(1 << pin); // Disable pull-up
         } else if (mode == INPUT_PULLUP) {
-            DDRB &= ~(1 << pin); 
-            PORTB |= (1 << pin); // Enable pull-up
+            *_DDRB &= ~(1 << pin); 
+            *_PORTB |= (1 << pin); // Enable pull-up
         }
-    } else if (pin < 20) { // PORTC (Analog pins A0-A5)
-        pin -= 14; // Adjust for PORTC pins
+    } else if (pin < 20) { // _PORTC (A0-A5)
+        pin -= 14; // Adjust for _PORTC pins
         if (mode == OUTPUT) {
-            DDRC |= (1 << pin); 
+            *_DDRC |= (1 << pin); 
         } else if (mode == INPUT) {
-            DDRC &= ~(1 << pin); 
-            PORTC &= ~(1 << pin); // Disable pull-up
+            *_DDRC &= ~(1 << pin); 
+            *_PORTC &= ~(1 << pin); // Disable pull-up
         } else if (mode == INPUT_PULLUP) {
-            DDRC &= ~(1 << pin); 
-            PORTC |= (1 << pin); // Enable pull-up
+            *_DDRC &= ~(1 << pin); 
+            *_PORTC |= (1 << pin); // Enable pull-up
         }
     }
 }
@@ -91,12 +97,10 @@ void communicateWithSlave(uint8_t slavePin, const char* slaveName) {
   Serial.print(receivedData);
   Serial.print("°C \n");
 
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("MINI - HEALTH");
-  lcd.setCursor(0, 1);
-  lcd.print("TempC: ");
-  lcd.print(receivedData);
+  lcd.setCursor(6, 1); // Move cursor to the position of the temperature value
+  lcd.print("     ");  // Clear the previous value (if needed)
+  lcd.setCursor(6, 1); // Move cursor back to the start of the temperature value
+  lcd.print(receivedData); // Print the new temperature
   
   delay(1000); // Delay for 1 second
 }
@@ -123,6 +127,12 @@ void setup() {
   lcd.print("MINI - HEALTH");
   customDelay(1500);
 
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("MINI - HEALTH");
+  lcd.setCursor(0, 1);
+  lcd.print("TempC: 0");
+
   Serial.begin(115200);
   Serial.println("System Initialized");
 }
@@ -132,4 +142,3 @@ void loop() {
   communicateWithSlave(SS2, "Slave 2");
   communicateWithSlave(SS3, "Slave 3");
 }
-
