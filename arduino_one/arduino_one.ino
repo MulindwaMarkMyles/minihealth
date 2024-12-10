@@ -1,6 +1,7 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <SPI.h>
+#include <EEPROM.h> // Include EEPROM library
 
 // Register definitions using pointers
 volatile uint8_t *_PORTB = 0x25;
@@ -19,11 +20,13 @@ volatile uint8_t *_DDRD = 0x2A;
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
+// Custom delay
 void customDelay(unsigned long delay) {
   unsigned long start_time = millis();
   while ((millis() - start_time) < delay) {}
 }
 
+// Custom digital write
 void customDigitalWrite(uint8_t pin, uint8_t value) {
     if (pin < 8) { // _PORTD
         if (value == HIGH) {
@@ -48,6 +51,7 @@ void customDigitalWrite(uint8_t pin, uint8_t value) {
     }
 }
 
+// Custom pin mode
 void customPinMode(uint8_t pin, uint8_t mode) {
     if (pin < 8) { // _PORTD
         if (mode == OUTPUT) {
@@ -84,6 +88,7 @@ void customPinMode(uint8_t pin, uint8_t mode) {
     }
 }
 
+// Communicate with a specific slave
 void communicateWithSlave(uint8_t slavePin, const char* slaveName) {
   customDigitalWrite(slavePin, LOW);              // Select the slave
   byte receivedData; // Variable to store received bytes
@@ -93,9 +98,11 @@ void communicateWithSlave(uint8_t slavePin, const char* slaveName) {
   customDigitalWrite(slavePin, HIGH);             // Deselect the slave
 
   // Process and display the received data
-  Serial.print("TempC: ");
+  Serial.print("Communicating with ");
+  Serial.print(slaveName);
+  Serial.print(": TempC: ");
   Serial.print(receivedData);
-  Serial.print("°C \n");
+  Serial.println("°C");
 
   lcd.setCursor(6, 1); // Move cursor to the position of the temperature value
   lcd.print("     ");  // Clear the previous value (if needed)
@@ -135,10 +142,28 @@ void setup() {
 
   Serial.begin(115200);
   Serial.println("System Initialized");
+
+  // Increment reset count in EEPROM
+  uint8_t resetCount = EEPROM.read(0);
+  resetCount = (resetCount + 1) % 3; // Wrap around to 0 after 2
+  EEPROM.write(0, resetCount);
+
+  // Indicate current mode on LCD
+  lcd.setCursor(0, 0);
+  lcd.print("Mode: ");
+  lcd.print(resetCount == 0 ? "Board 1" : (resetCount == 1 ? "Board 2" : "Board 3"));
 }
 
 void loop() {
-  communicateWithSlave(SS1, "Slave 1");
-  communicateWithSlave(SS2, "Slave 2");
-  communicateWithSlave(SS3, "Slave 3");
+  uint8_t resetCount = EEPROM.read(0);
+  
+  if (resetCount == 0) {
+    communicateWithSlave(SS1, "Board 1");
+  } else if (resetCount == 1) {
+    communicateWithSlave(SS2, "Board 2");
+  } else {
+    communicateWithSlave(SS3, "Board 3");
+  }
+
+  delay(1000); // Prevent rapid loop execution
 }
