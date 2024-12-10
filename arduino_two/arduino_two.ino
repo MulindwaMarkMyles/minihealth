@@ -2,6 +2,7 @@
 
 #define LM35_PIN 1 // LM35 connected to Analog pin A1 (ADC1)
 #define LEDpin 2
+#define BUZZERpin 3
 
 volatile boolean received = false;
 volatile byte Slavereceived, Slavesend;
@@ -82,6 +83,8 @@ void setup() {
   
   customPinMode(LEDpin, OUTPUT);
   customDigitalWrite(LEDpin, LOW);
+  customPinMode(BUZZERpin, OUTPUT);
+  customDigitalWrite(BUZZERpin, LOW);
 
   Serial.begin(115200);
 }
@@ -111,8 +114,10 @@ void loop() {
   // LED Indicator
   if (tempC > 30.0) {
     customDigitalWrite(LEDpin, HIGH);
+    customDigitalWrite(BUZZERpin, HIGH);
   } else {
     customDigitalWrite(LEDpin, LOW);
+    customDigitalWrite(BUZZERpin, LOW);
   }
 
   // Debugging
