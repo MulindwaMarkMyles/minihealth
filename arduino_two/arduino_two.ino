@@ -15,6 +15,13 @@ volatile uint16_t* _TCNT1 = (volatile uint16_t*) 0x84;
 volatile uint16_t* _OCR1A = (volatile uint16_t*) 0x88;
 volatile uint8_t* _TIFR1 = (volatile uint8_t*) 0x36;
 
+volatile uint8_t *_PORTB = 0x25;
+volatile uint8_t *_DDRB = 0x24;
+volatile uint8_t *_PORTC = 0x28;
+volatile uint8_t *_DDRC = 0x27;
+volatile uint8_t *_PORTD = 0x2B;
+volatile uint8_t *_DDRD = 0x2A;
+
 // Function to create a delay using Timer1
 void customTimerDelay(uint16_t milliseconds) {
     // Clear Timer/Counter1 registers
@@ -42,61 +49,61 @@ void customTimerDelay(uint16_t milliseconds) {
 
 
 void customDigitalWrite(uint8_t pin, uint8_t value) {
-    if (pin < 8) { // PORTD
+    if (pin < 8) { // _PORTD
         if (value == HIGH) {
-            PORTD |= (1 << pin); 
+            *_PORTD |= (1 << pin); 
         } else {
-            PORTD &= ~(1 << pin);
+            *_PORTD &= ~(1 << pin);
         }
-    } else if (pin < 14) { // PORTB
-        pin -= 8; // Adjust pin number for PORTB
+    } else if (pin < 14) { // _PORTB
+        pin -= 8; // Adjust pin number for _PORTB
         if (value == HIGH) {
-            PORTB |= (1 << pin); 
+            *_PORTB |= (1 << pin); 
         } else {
-            PORTB &= ~(1 << pin); 
+            *_PORTB &= ~(1 << pin); 
         }
-    } else if (pin < 20) { // (A0-A5) belong to PORTC
-        pin -= 14; // Adjust pin number for PORTC
+    } else if (pin < 20) { // (A0-A5) belong to _PORTC
+        pin -= 14; // Adjust pin number for _PORTC
         if (value == HIGH) {
-            PORTC |= (1 << pin);  
+            *_PORTC |= (1 << pin);  
         } else {
-            PORTC &= ~(1 << pin); 
+            *_PORTC &= ~(1 << pin); 
         }
     }
 }
 
 void customPinMode(uint8_t pin, uint8_t mode) {
-    if (pin < 8) { // PORTD
+    if (pin < 8) { // _PORTD
         if (mode == OUTPUT) {
-            DDRD |= (1 << pin); 
+            *_DDRD |= (1 << pin); 
         } else if (mode == INPUT) {
-            DDRD &= ~(1 << pin); 
-            PORTD &= ~(1 << pin); // Disable pull-up
+            *_DDRD &= ~(1 << pin); 
+            *_PORTD &= ~(1 << pin); // Disable pull-up
         } else if (mode == INPUT_PULLUP) {
-            DDRD &= ~(1 << pin); 
-            PORTD |= (1 << pin); // Enable pull-up
+            *_DDRD &= ~(1 << pin); 
+            *_PORTD |= (1 << pin); // Enable pull-up
         }
-    } else if (pin < 14) { // PORTB
-        pin -= 8; // Adjust for PORTB pins
+    } else if (pin < 14) { // _PORTB
+        pin -= 8; // Adjust for _PORTB pins
         if (mode == OUTPUT) {
-            DDRB |= (1 << pin);
+            *_DDRB |= (1 << pin);
         } else if (mode == INPUT) {
-            DDRB &= ~(1 << pin); 
-            PORTB &= ~(1 << pin); // Disable pull-up
+            *_DDRB &= ~(1 << pin); 
+            *_PORTB &= ~(1 << pin); // Disable pull-up
         } else if (mode == INPUT_PULLUP) {
-            DDRB &= ~(1 << pin); 
-            PORTB |= (1 << pin); // Enable pull-up
+            *_DDRB &= ~(1 << pin); 
+            *_PORTB |= (1 << pin); // Enable pull-up
         }
-    } else if (pin < 20) { // PORTC (Analog pins A0-A5)
-        pin -= 14; // Adjust for PORTC pins
+    } else if (pin < 20) { // _PORTC (Analog pins A0-A5)
+        pin -= 14; // Adjust for _PORTC pins
         if (mode == OUTPUT) {
-            DDRC |= (1 << pin); 
+            *_DDRC |= (1 << pin); 
         } else if (mode == INPUT) {
-            DDRC &= ~(1 << pin); 
-            PORTC &= ~(1 << pin); // Disable pull-up
+            *_DDRC &= ~(1 << pin); 
+            *_PORTC &= ~(1 << pin); // Disable pull-up
         } else if (mode == INPUT_PULLUP) {
-            DDRC &= ~(1 << pin); 
-            PORTC |= (1 << pin); // Enable pull-up
+            *_DDRC &= ~(1 << pin); 
+            *_PORTC |= (1 << pin); // Enable pull-up
         }
     }
 }
@@ -104,7 +111,7 @@ void customPinMode(uint8_t pin, uint8_t mode) {
 
 
 void setup() {
-  DDRC &= ~(1 << LM35_PIN); // Configure ADC1 (A1) as input
+  *_DDRC &= ~(1 << LM35_PIN); // Configure ADC1 (A1) as input
   ADMUX = (1 << REFS0);     // AVcc as reference voltage
   ADMUX |= LM35_PIN;        // Select ADC1 (A1)
   ADCSRA = (1 << ADEN)      // Enable ADC
